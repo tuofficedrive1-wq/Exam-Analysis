@@ -476,9 +476,6 @@
 
   function updateDashboard(data) {
 
-    // Unique students count
-    const uniqueStudents = new Set(data.map(d => d.student + d.class));
-
     document.getElementById('totalStudents').innerText = Object.keys(studentResults).length;
 
     // Student-wise result calculation
@@ -776,7 +773,7 @@
   }
 
 
- 
+
 
   campusFilter.addEventListener('change', applyFilters);
   classFilter.addEventListener('change', applyFilters);
