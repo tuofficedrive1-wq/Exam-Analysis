@@ -301,28 +301,7 @@
   </div>
 
 
-  <div class="table-box">
-
-    <table>
-
-      <thead>
-        <tr>
-          <th>طالب علم</th>
-          <th>درجہ</th>
-          <th>جامعہ</th>
-          <th>مضمون</th>
-          <th>نمبر</th>
-          <th>نتیجہ</th>
-        </tr>
-      </thead>
-
-      <tbody id="tableBody"></tbody>
-
-    </table>
-
   </div>
-
-</div>
 
 
 <script>
@@ -372,7 +351,10 @@
 
       const data = await response.json();
 
-      students = data.map(item => {
+      // Faster loading
+      loadingBox.innerHTML = 'ڈیٹا پراسیس ہو رہا ہے...';
+
+      students = data.slice(0, 3000).map(item => {
 
         const marks = Number(item.marks) || 0;
 
@@ -393,6 +375,9 @@
       });
 
       loadingBox.style.display = 'none';
+
+      // Pre-filter invalid rows
+      students = students.filter(s => s.student && s.subject && s.class);
 
       initFilters();
 
@@ -500,12 +485,14 @@
     document.getElementById('failStudents').innerText = fail;
     document.getElementById('absentStudents').innerText = absent;
 
-    renderClassTabs();
+    requestAnimationFrame(() => {
+      renderClassTabs();
     renderSubjectTabs(data);
 
     drawResultChart(pass, fail, absent);
     drawSubjectChart(data);
-    drawTable(data);
+    });
+    // Table removed for performance
 
   }
 
@@ -697,30 +684,7 @@
   // TABLE
   // =============================
 
-  function drawTable(data) {
-
-    const tbody = document.getElementById('tableBody');
-
-    tbody.innerHTML = '';
-
-    data.slice(0, 500).forEach(s => {
-
-      tbody.innerHTML += `
-
-        <tr>
-          <td>${s.student}</td>
-          <td>${s.class}</td>
-          <td>${s.campus}</td>
-          <td>${s.subject}</td>
-          <td>${s.marks}</td>
-          <td class="${s.result.toLowerCase()}">
-            ${s.result}
-          </td>
-        </tr>
-
-      `;
-
-    });
+  // Table removed for faster loading);
 
   }
 
@@ -745,3 +709,4 @@
 
 </body>
 </html>
+
