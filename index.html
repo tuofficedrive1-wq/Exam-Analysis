@@ -476,6 +476,33 @@
 
   function updateDashboard(data) {
 
+    // Student-wise result calculation
+    const studentResults = {};
+
+    data.forEach(s => {
+
+      const key = s.student + '_' + s.class;
+
+      if(!studentResults[key]) {
+        studentResults[key] = {
+          pass: 0,
+          fail: 0,
+          absent: 0
+        };
+      }
+
+      if(s.result === 'Fail') {
+        studentResults[key].fail++;
+      }
+      else if(s.result === 'Absent') {
+        studentResults[key].absent++;
+      }
+      else {
+        studentResults[key].pass++;
+      }
+
+    });
+
     document.getElementById('totalStudents').innerText = Object.keys(studentResults).length;
 
     // Student-wise result calculation
@@ -773,7 +800,7 @@
   }
 
 
-
+  
 
   campusFilter.addEventListener('change', applyFilters);
   classFilter.addEventListener('change', applyFilters);
