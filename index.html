@@ -261,9 +261,27 @@
     </div>
 
     <div class="card">
-      <h2 id="avgMarks">0</h2>
-      <p>اوسط نمبر</p>
+      <h2 id="absentStudents">0</h2>
+      <p>غیر حاضر</p>
     </div>
+
+  </div>
+
+
+  <div style="background:white;padding:20px;border-radius:20px;margin-bottom:20px;box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+
+    <h2 style="margin-bottom:15px;">کلاسز</h2>
+
+    <div id="classTabs" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
+
+  </div>
+
+
+  <div style="background:white;padding:20px;border-radius:20px;margin-bottom:20px;box-shadow:0 10px 25px rgba(0,0,0,0.15);">
+
+    <h2 style="margin-bottom:15px;">مضامین</h2>
+
+    <div id="subjectTabs" style="display:flex;flex-wrap:wrap;gap:10px;"></div>
 
   </div>
 
@@ -271,12 +289,12 @@
   <div class="charts">
 
     <div class="chart-box">
-      <div class="chart-title">پاس / فیل تجزیہ</div>
+      <div class="chart-title">پاس / فیل / غیر حاضر</div>
       <canvas id="resultChart"></canvas>
     </div>
 
     <div class="chart-box">
-      <div class="chart-title">مضامین کے حساب سے اوسط نمبر</div>
+      <div class="chart-title">مضامین کے حساب سے نتیجہ</div>
       <canvas id="subjectChart"></canvas>
     </div>
 
@@ -321,6 +339,8 @@
   // =============================
 
   let students = [];
+  let selectedClass = '';
+  let selectedSubject = '';
   let resultChart;
   let subjectChart;
 
@@ -362,7 +382,12 @@
           campus: item.campus,
           subject: item.subject,
           marks: marks,
-          result: marks >= 35 ? 'Pass' : 'Fail'
+          result:
+            item.marks === 'غ'
+            ? 'Absent'
+            : marks >= 35
+            ? 'Pass'
+            : 'Fail'
         };
 
       });
@@ -436,6 +461,14 @@
       filtered = filtered.filter(s => s.subject === subjectFilter.value);
     }
 
+    if(selectedClass) {
+      filtered = filtered.filter(s => s.class === selectedClass);
+    }
+
+    if(selectedSubject) {
+      filtered = filtered.filter(s => s.subject === selectedSubject);
+    }
+
     if(searchInput.value) {
 
       const q = searchInput.value.toLowerCase();
@@ -461,17 +494,16 @@
 
     const pass = data.filter(s => s.result === 'Pass').length;
     const fail = data.filter(s => s.result === 'Fail').length;
+    const absent = data.filter(s => s.result === 'Absent').length;
 
     document.getElementById('passStudents').innerText = pass;
     document.getElementById('failStudents').innerText = fail;
+    document.getElementById('absentStudents').innerText = absent;
 
-    const avg = data.length
-      ? (data.reduce((a,b)=>a+b.marks,0) / data.length).toFixed(2)
-      : 0;
+    renderClassTabs();
+    renderSubjectTabs(data);
 
-    document.getElementById('avgMarks').innerText = avg;
-
-    drawResultChart(pass, fail);
+    drawResultChart(pass, fail, absent);
     drawSubjectChart(data);
     drawTable(data);
 
@@ -482,7 +514,7 @@
   // RESULT CHART
   // =============================
 
-  function drawResultChart(pass, fail) {
+  function drawResultChart(pass, fail, absent) {
 
     const ctx = document.getElementById('resultChart');
 
@@ -493,10 +525,10 @@
     resultChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['پاس', 'فیل'],
+        labels: ['پاس', 'فیل', 'غیر حاضر'],
         datasets: [{
-          data: [pass, fail],
-          backgroundColor: ['#10b981', '#ef4444'],
+          data: [pass, fail, absent],
+          backgroundColor: ['#10b981', '#ef4444', '#f59e0b'],
           borderWidth: 0
         }]
       },
@@ -504,6 +536,94 @@
         responsive: true,
         maintainAspectRatio: false
       }
+    });
+
+  }
+
+
+  // =============================
+  // CLASS TABS
+  // =============================
+
+  function renderClassTabs() {
+
+    const classTabs = document.getElementById('classTabs');
+
+    classTabs.innerHTML = '';
+
+    const classes = [...new Set(students.map(s => s.class))];
+
+    classes.forEach(cls => {
+
+      const btn = document.createElement('button');
+
+      btn.innerText = cls;
+
+      btn.style.cssText = `
+        padding:10px 18px;
+        border:none;
+        border-radius:10px;
+        background:${selectedClass === cls ? '#2563eb' : '#e5e7eb'};
+        color:${selectedClass === cls ? 'white' : 'black'};
+        cursor:pointer;
+        font-size:18px;
+        font-family:'Jameel Noori Nastaleeq';
+      `;
+
+      btn.onclick = () => {
+
+        selectedClass = cls;
+
+        applyFilters();
+
+      };
+
+      classTabs.appendChild(btn);
+
+    });
+
+  }
+
+
+  // =============================
+  // SUBJECT TABS
+  // =============================
+
+  function renderSubjectTabs(data) {
+
+    const subjectTabs = document.getElementById('subjectTabs');
+
+    subjectTabs.innerHTML = '';
+
+    const subjects = [...new Set(data.map(s => s.subject))];
+
+    subjects.forEach(sub => {
+
+      const btn = document.createElement('button');
+
+      btn.innerText = sub;
+
+      btn.style.cssText = `
+        padding:10px 18px;
+        border:none;
+        border-radius:10px;
+        background:${selectedSubject === sub ? '#059669' : '#e5e7eb'};
+        color:${selectedSubject === sub ? 'white' : 'black'};
+        cursor:pointer;
+        font-size:18px;
+        font-family:'Jameel Noori Nastaleeq';
+      `;
+
+      btn.onclick = () => {
+
+        selectedSubject = sub;
+
+        applyFilters();
+
+      };
+
+      subjectTabs.appendChild(btn);
+
     });
 
   }
