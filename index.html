@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="ur" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>اسٹوڈنٹ رزلٹ ڈیش بورڈ</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a, #1e3a8a, #0f766e);
+      background-attachment: fixed;
+      padding: 20px;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+
+    .title {
+      font-size: 34px;
+      font-weight: bold;
+    }
+
+    .filters {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    select,
+    input {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      background: white;
+      min-width: 180px;
+      font-size: 15px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .card {
+      background: linear-gradient(135deg, #ffffff, #f8fafc);
+      padding: 25px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      border: 1px solid rgba(255,255,255,0.2);
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+    }
+
+    .card:nth-child(1) {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color: white;
+    }
+
+    .card:nth-child(2) {
+      background: linear-gradient(135deg, #059669, #34d399);
+      color: white;
+    }
+
+    .card:nth-child(3) {
+      background: linear-gradient(135deg, #dc2626, #f87171);
+      color: white;
+    }
+
+    .card:nth-child(4) {
+      background: linear-gradient(135deg, #7c3aed, #a78bfa);
+      color: white;
+    }
+
+    .card h2 {
+      font-size: 38px;
+      margin-bottom: 10px;
+    }
+
+    .card p {
+      color: rgba(255,255,255,0.9);
+      font-size: 18px;
+    }
+
+    .charts {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+
+    .chart-box {
+      background: rgba(255,255,255,0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      height: 420px;
+    }
+
+    .chart-title {
+      font-size: 20px;
+      margin-bottom: 15px;
+      font-weight: bold;
+    }
+
+    .table-box {
+      background: rgba(255,255,255,0.96);
+      border-radius: 20px;
+      overflow: auto;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th {
+      background: linear-gradient(135deg, #1e293b, #334155);
+      color: white;
+      padding: 14px;
+      text-align: right;
+      position: sticky;
+      top: 0;
+    }
+
+    td {
+      padding: 12px;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tr:hover {
+      background: #f9fafb;
+    }
+
+    .loading {
+      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      color: white;
+      padding: 18px;
+      border-radius: 16px;
+      margin-bottom: 20px;
+      font-weight: bold;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+    }
+
+    .pass {
+      color: green;
+      font-weight: bold;
+    }
+
+    .fail {
+      color: red;
+      font-weight: bold;
+    }
+
+    @media(max-width:768px){
+
+      .charts {
+        grid-template-columns: 1fr;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <div class="header">
+
+    <div class="title" style="color:white;text-shadow:0 3px 10px rgba(0,0,0,0.3);">
+      📊 اسٹوڈنٹ رزلٹ ڈیش بورڈ
+    </div>
+
+    <div class="filters">
+
+      <select id="campusFilter">
+        <option value="">تمام جامعات</option>
+      </select>
+
+      <select id="classFilter">
+        <option value="">تمام درجات</option>
+      </select>
+
+      <select id="subjectFilter">
+        <option value="">تمام مضامین</option>
+      </select>
+
+      <input type="text" id="searchInput" placeholder="طالب علم تلاش کریں">
+
+    </div>
+
+  </div>
+
+
+  <div class="loading" id="loadingBox">
+    ڈیٹا لوڈ ہو رہا ہے...
+  </div>
+
+
+  <div class="cards">
+
+    <div class="card">
+      <h2 id="totalStudents">0</h2>
+      <p>کل طلبہ</p>
+    </div>
+
+    <div class="card">
+      <h2 id="passStudents">0</h2>
+      <p>پاس</p>
+    </div>
+
+    <div class="card">
+      <h2 id="failStudents">0</h2>
+      <p>فیل</p>
+    </div>
+
+    <div class="card">
+      <h2 id="avgMarks">0</h2>
+      <p>اوسط نمبر</p>
+    </div>
+
+  </div>
+
+
+  <div class="charts">
+
+    <div class="chart-box">
+      <div class="chart-title">پاس / فیل تجزیہ</div>
+      <canvas id="resultChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <div class="chart-title">مضامین کے حساب سے اوسط نمبر</div>
+      <canvas id="subjectChart"></canvas>
+    </div>
+
+  </div>
+
+
+  <div class="table-box">
+
+    <table>
+
+      <thead>
+        <tr>
+          <th>طالب علم</th>
+          <th>درجہ</th>
+          <th>جامعہ</th>
+          <th>مضمون</th>
+          <th>نمبر</th>
+          <th>نتیجہ</th>
+        </tr>
+      </thead>
+
+      <tbody id="tableBody"></tbody>
+
+    </table>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  // =============================
+  // API URL
+  // =============================
+
+  const API_URL = 'https://script.google.com/macros/s/AKfycbwJMSgyywUar5NbToA_jfoZyWsiG8-O9KaHy2G_n8fFw0d0qeQArYswIkWH9Mb-Qs_a/exec';
+
+
+  // =============================
+  // GLOBAL DATA
+  // =============================
+
+  let students = [];
+  let resultChart;
+  let subjectChart;
+
+
+  // =============================
+  // DOM
+  // =============================
+
+  const loadingBox = document.getElementById('loadingBox');
+
+  const campusFilter = document.getElementById('campusFilter');
+  const classFilter = document.getElementById('classFilter');
+  const subjectFilter = document.getElementById('subjectFilter');
+  const searchInput = document.getElementById('searchInput');
+
+
+  // =============================
+  // LOAD DATA
+  // =============================
+
+  async function loadData() {
+
+    try {
+
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        mode: 'cors'
+      });
+
+      const data = await response.json();
+
+      students = data.map(item => {
+
+        const marks = Number(item.marks) || 0;
+
+        return {
+          student: item.student,
+          class: item.class,
+          campus: item.campus,
+          subject: item.subject,
+          marks: marks,
+          result: marks >= 35 ? 'Pass' : 'Fail'
+        };
+
+      });
+
+      loadingBox.style.display = 'none';
+
+      initFilters();
+
+      updateDashboard(students);
+
+    }
+
+    catch(error) {
+
+      loadingBox.innerHTML = `
+        ڈیٹا لوڈ نہیں ہو رہا<br><br>
+        Apps Script میں یہ settings کریں:<br>
+        Execute as: Me<br>
+        Who has access: Anyone
+      `;
+
+      console.error(error);
+
+    }
+
+  }
+
+
+  // =============================
+  // FILTERS
+  // =============================
+
+  function initFilters() {
+
+    const campuses = [...new Set(students.map(s => s.campus))];
+    const classes = [...new Set(students.map(s => s.class))];
+    const subjects = [...new Set(students.map(s => s.subject))];
+
+    campuses.forEach(c => {
+      campusFilter.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    classes.forEach(c => {
+      classFilter.innerHTML += `<option value="${c}">${c}</option>`;
+    });
+
+    subjects.forEach(s => {
+      subjectFilter.innerHTML += `<option value="${s}">${s}</option>`;
+    });
+
+  }
+
+
+  // =============================
+  // APPLY FILTERS
+  // =============================
+
+  function applyFilters() {
+
+    let filtered = [...students];
+
+    if(campusFilter.value) {
+      filtered = filtered.filter(s => s.campus === campusFilter.value);
+    }
+
+    if(classFilter.value) {
+      filtered = filtered.filter(s => s.class === classFilter.value);
+    }
+
+    if(subjectFilter.value) {
+      filtered = filtered.filter(s => s.subject === subjectFilter.value);
+    }
+
+    if(searchInput.value) {
+
+      const q = searchInput.value.toLowerCase();
+
+      filtered = filtered.filter(s =>
+        s.student.toLowerCase().includes(q)
+      );
+
+    }
+
+    updateDashboard(filtered);
+
+  }
+
+
+  // =============================
+  // UPDATE DASHBOARD
+  // =============================
+
+  function updateDashboard(data) {
+
+    document.getElementById('totalStudents').innerText = data.length;
+
+    const pass = data.filter(s => s.result === 'Pass').length;
+    const fail = data.filter(s => s.result === 'Fail').length;
+
+    document.getElementById('passStudents').innerText = pass;
+    document.getElementById('failStudents').innerText = fail;
+
+    const avg = data.length
+      ? (data.reduce((a,b)=>a+b.marks,0) / data.length).toFixed(2)
+      : 0;
+
+    document.getElementById('avgMarks').innerText = avg;
+
+    drawResultChart(pass, fail);
+    drawSubjectChart(data);
+    drawTable(data);
+
+  }
+
+
+  // =============================
+  // RESULT CHART
+  // =============================
+
+  function drawResultChart(pass, fail) {
+
+    const ctx = document.getElementById('resultChart');
+
+    if(resultChart) {
+      resultChart.destroy();
+    }
+
+    resultChart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['پاس', 'فیل'],
+        datasets: [{
+          data: [pass, fail],
+          backgroundColor: ['#10b981', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+  }
+
+
+  // =============================
+  // SUBJECT CHART
+  // =============================
+
+  function drawSubjectChart(data) {
+
+    const subjectData = {};
+
+    data.forEach(s => {
+
+      if(!subjectData[s.subject]) {
+        subjectData[s.subject] = {
+          total: 0,
+          count: 0
+        };
+      }
+
+      subjectData[s.subject].total += s.marks;
+      subjectData[s.subject].count++;
+
+    });
+
+    const labels = [];
+    const averages = [];
+
+    Object.keys(subjectData).forEach(subject => {
+
+      labels.push(subject);
+
+      averages.push(
+        (
+          subjectData[subject].total /
+          subjectData[subject].count
+        ).toFixed(2)
+      );
+
+    });
+
+    const ctx = document.getElementById('subjectChart');
+
+    if(subjectChart) {
+      subjectChart.destroy();
+    }
+
+    subjectChart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'اوسط نمبر',
+          data: averages,
+          backgroundColor: '#3b82f6',
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+
+  }
+
+
+  // =============================
+  // TABLE
+  // =============================
+
+  function drawTable(data) {
+
+    const tbody = document.getElementById('tableBody');
+
+    tbody.innerHTML = '';
+
+    data.slice(0, 500).forEach(s => {
+
+      tbody.innerHTML += `
+
+        <tr>
+          <td>${s.student}</td>
+          <td>${s.class}</td>
+          <td>${s.campus}</td>
+          <td>${s.subject}</td>
+          <td>${s.marks}</td>
+          <td class="${s.result.toLowerCase()}">
+            ${s.result}
+          </td>
+        </tr>
+
+      `;
+
+    });
+
+  }
+
+
+  // =============================
+  // EVENTS
+  // =============================
+
+  campusFilter.addEventListener('change', applyFilters);
+  classFilter.addEventListener('change', applyFilters);
+  subjectFilter.addEventListener('change', applyFilters);
+  searchInput.addEventListener('keyup', applyFilters);
+
+
+  // =============================
+  // START
+  // =============================
+
+  loadData();
+
+</script>
+
+</body>
+</html>
