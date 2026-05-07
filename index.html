@@ -479,11 +479,52 @@
     // Unique students count
     const uniqueStudents = new Set(data.map(d => d.student + d.class));
 
-    document.getElementById('totalStudents').innerText = uniqueStudents.size;
+    document.getElementById('totalStudents').innerText = Object.keys(studentResults).length;
 
-    const pass = data.filter(s => s.result === 'Pass').length;
-    const fail = data.filter(s => s.result === 'Fail').length;
-    const absent = data.filter(s => s.result === 'Absent').length;
+    // Student-wise result calculation
+    const studentResults = {};
+
+    data.forEach(s => {
+
+      const key = s.student + '_' + s.class;
+
+      if(!studentResults[key]) {
+        studentResults[key] = {
+          pass: 0,
+          fail: 0,
+          absent: 0
+        };
+      }
+
+      if(s.result === 'Fail') {
+        studentResults[key].fail++;
+      }
+      else if(s.result === 'Absent') {
+        studentResults[key].absent++;
+      }
+      else {
+        studentResults[key].pass++;
+      }
+
+    });
+
+    let pass = 0;
+    let fail = 0;
+    let absent = 0;
+
+    Object.values(studentResults).forEach(r => {
+
+      if(r.fail > 0) {
+        fail++;
+      }
+      else if(r.absent > 0 && r.pass === 0) {
+        absent++;
+      }
+      else {
+        pass++;
+      }
+
+    });
 
     // Debug
     console.log('Total Records:', data.length);
@@ -735,6 +776,7 @@
   }
 
 
+ 
 
   campusFilter.addEventListener('change', applyFilters);
   classFilter.addEventListener('change', applyFilters);
