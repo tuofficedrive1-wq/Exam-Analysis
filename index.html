@@ -457,11 +457,42 @@
 
     try {
 
-      const response = await fetch(API_URL);
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        mode: 'cors'
+      });
+
+      if(!response.ok) {
+        throw new Error('Network response failed');
+      }
 
       const data = await response.json();
 
-      students = data;
+      console.log('API DATA:', data);
+
+      // Agar direct array nahi aa raha
+      if(!Array.isArray(data)) {
+
+        // Apps Script kabhi kabhi {data:[...]} return karta hai
+        if(Array.isArray(data.data)) {
+          students = data.data;
+        }
+        else {
+          throw new Error('Invalid API format');
+        }
+
+      }
+      else {
+
+        students = data;
+
+      }
+
+      // Empty rows remove
+      students = students.filter(student =>
+        student &&
+        student.student
+      );
 
       filteredStudents = [...students];
 
@@ -477,10 +508,25 @@
 
     catch(error) {
 
-      document.getElementById('loadingBox').innerHTML =
-        '❌ ڈیٹا لوڈ نہیں ہو رہا۔ Apps Script permissions چیک کریں۔';
+      console.error('LOAD ERROR:', error);
 
-      console.error(error);
+      document.getElementById('loadingBox').innerHTML = `
+
+        ❌ ڈیٹا لوڈ نہیں ہو رہا<br><br>
+
+        Apps Script me ye settings karein:<br><br>
+
+        <b>Deploy → Manage Deployments → Edit</b><br><br>
+
+        Execute as:<br>
+        <b>Me</b><br><br>
+
+        Who has access:<br>
+        <b>Anyone</b><br><br>
+
+        Aur phir دوبارہ deploy کریں۔
+
+      `;
 
     }
 
